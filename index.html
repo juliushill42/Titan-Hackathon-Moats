@@ -1,112 +1,786 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Titan Hackathon Engine</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TitanU AI — Agent Fleet | Julius Cameron Hill</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07070f;--surface:#0d0d1a;--border:#1a1a2e;--border2:#252540;
+  --text:#e2e8f0;--muted:#475569;--dim:#1e293b;
+  --arize:#a855f7;--elastic:#3b82f6;--dynatrace:#eab308;
+  --gitlab:#f97316;--mongodb:#22c55e;--fivetran:#10b981;
+  --green:#22c55e;--red:#ef4444;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0a0a1a,#0d1528,#0a1020);border-bottom:1px solid var(--border);padding:1.5rem 2rem;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;flex-shrink:0}
+.logo-text h1{font-size:1.1rem;font-weight:900;background:linear-gradient(90deg,#60a5fa,#a78bfa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-text p{font-size:0.65rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:1px}
+.header-meta{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+.badge{padding:4px 10px;border-radius:20px;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border:1px solid}
+.badge-patent{color:#60a5fa;border-color:#3b82f644;background:#3b82f611}
+.badge-live{color:#22c55e;border-color:#22c55e44;background:#22c55e11;display:flex;align-items:center;gap:5px}
+.pulse{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}
+.nav-inner{max-width:1400px;margin:0 auto;display:flex;gap:0;padding:0 2rem}
+.nav-btn{padding:1rem 1.25rem;font-size:0.78rem;font-weight:600;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;font-family:'Inter',sans-serif}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--text);border-bottom-color:var(--active-color,#3b82f6)}
+
+/* HERO */
+.hero{max-width:1400px;margin:0 auto;padding:2.5rem 2rem 1.5rem}
+.hero-grid{display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:start;margin-bottom:2rem}
+.hero-title{font-size:2.2rem;font-weight:900;line-height:1.15;margin-bottom:0.75rem}
+.hero-title span{background:linear-gradient(90deg,#60a5fa,#a78bfa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{color:#94a3b8;font-size:0.9rem;line-height:1.7;max-width:600px}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem}
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.hero-grid{grid-template-columns:1fr}.hero-title{font-size:1.6rem}}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+.stat-num{font-size:1.8rem;font-weight:900;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'JetBrains Mono',monospace}
+.stat-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px}
+.stat-sub{font-size:0.7rem;color:var(--green);margin-top:2px}
+
+/* SECTIONS */
+.section{max-width:1400px;margin:0 auto;padding:0 2rem 3rem}
+.section-title{font-size:1.1rem;font-weight:700;margin-bottom:0.25rem}
+.section-sub{font-size:0.8rem;color:var(--muted);margin-bottom:1.5rem}
+
+/* AGENT CARDS */
+.agents-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+@media(max-width:1100px){.agents-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.agents-grid{grid-template-columns:1fr}}
+
+.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.agent-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s;border-radius:16px}
+.agent-card:hover{transform:translateY(-2px);border-color:var(--track-color)}
+.agent-card:hover::before{opacity:1}
+
+.agent-track{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--track-color);margin-bottom:0.75rem;display:flex;align-items:center;gap:6px}
+.agent-track::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--track-color)}
+.agent-name{font-size:1rem;font-weight:800;margin-bottom:0.3rem;color:#f1f5f9}
+.agent-subtitle{font-size:0.72rem;color:var(--track-color);font-weight:600;margin-bottom:0.75rem}
+.agent-desc{font-size:0.78rem;color:#94a3b8;line-height:1.6;margin-bottom:1rem}
+
+.what-it-does{background:#0a0a18;border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:1rem}
+.what-label{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.4rem}
+.what-item{display:flex;gap:6px;align-items:flex-start;font-size:0.72rem;color:#94a3b8;margin-bottom:3px}
+.what-item::before{content:'→';color:var(--track-color);flex-shrink:0;margin-top:1px}
+
+.agent-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.status-live{display:flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:700;color:var(--green)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.run-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--track-color);background:transparent;color:var(--track-color);font-size:0.7rem;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.run-btn:hover{background:var(--track-color);color:#000}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:#000000cc;z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:#0d0d1a;border:1px solid var(--border2);border-radius:20px;width:100%;max-width:740px;max-height:90vh;overflow-y:auto;padding:2rem}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem}
+.modal-close{background:var(--dim);border:none;color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+.modal-track{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px}
+.modal-name{font-size:1.4rem;font-weight:900;margin-bottom:4px}
+.modal-tagline{font-size:0.82rem;color:#94a3b8;margin-bottom:1.5rem}
+
+.tab-row{display:flex;gap:4px;margin-bottom:1.25rem;background:#0a0a18;border-radius:10px;padding:4px}
+.tab{padding:7px 14px;border-radius:7px;font-size:0.75rem;font-weight:600;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.tab.active{background:var(--dim);color:var(--text)}
+
+.explain-block{background:#0a0a18;border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+.explain-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--muted);margin-bottom:0.6rem}
+.step-list{list-style:none}
+.step-list li{display:flex;gap:10px;margin-bottom:8px;font-size:0.8rem;color:#94a3b8;align-items:flex-start}
+.step-num{background:var(--track-color);color:#000;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:900;flex-shrink:0;margin-top:1px}
+
+.demo-area{background:#050510;border:1px solid var(--border);border-radius:10px;padding:1.25rem;min-height:200px;max-height:300px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-bottom:1rem}
+.demo-empty{color:var(--dim);text-align:center;padding:3rem 0;font-size:0.8rem}
+.demo-line{margin-bottom:6px;line-height:1.5}
+.demo-line.user{color:#60a5fa}
+.demo-line.agent{color:#94a3b8}
+.demo-line.system{color:var(--green)}
+.demo-line.key{color:var(--track-color)}
+
+.input-row{display:flex;gap:8px}
+.demo-input{flex:1;background:#0a0a18;border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.82rem;outline:none;font-family:'Inter',sans-serif}
+.demo-input:focus{border-color:var(--track-color)}
+.send-btn{padding:9px 18px;border-radius:8px;border:none;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+
+.quick-prompts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.qp{padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:0.67rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.qp:hover{border-color:var(--track-color);color:var(--track-color)}
+
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.tech-item{background:#0a0a18;border:1px solid var(--border);border-radius:8px;padding:0.75rem}
+.tech-item-label{font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+.tech-item-val{font-size:0.8rem;color:var(--track-color);font-family:'JetBrains Mono',monospace;font-weight:700}
+
+/* FLEET SECTION */
+.track-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem}
+.track-tab{padding:7px 14px;border-radius:20px;font-size:0.72rem;font-weight:700;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
+.track-tab.active,.track-tab:hover{color:#000;background:var(--tc)}
+.fleet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem}
+@media(max-width:900px){.fleet-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.fleet-grid{grid-template-columns:1fr}}
+.fleet-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;transition:all 0.15s;cursor:default}
+.fleet-card:hover{border-color:var(--tc)}
+.fleet-id{font-size:0.6rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.fleet-name{font-size:0.82rem;font-weight:700;color:#e2e8f0;margin-bottom:4px}
+.fleet-desc{font-size:0.72rem;color:#64748b;line-height:1.5}
+.fleet-repo{font-size:0.65rem;color:var(--tc);margin-top:6px;text-decoration:none}
+.fleet-repo:hover{text-decoration:underline}
+
+/* ARCH */
+.arch-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem}
+.arch-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;align-items:center;text-align:center;margin-bottom:2rem}
+@media(max-width:800px){.arch-flow{grid-template-columns:repeat(2,1fr)}}
+.arch-node{background:#0a0a18;border:1px solid var(--border2);border-radius:12px;padding:1rem}
+.arch-node-icon{font-size:1.5rem;margin-bottom:6px}
+.arch-node-label{font-size:0.7rem;font-weight:700;color:#e2e8f0;margin-bottom:3px}
+.arch-node-sub{font-size:0.62rem;color:var(--muted)}
+.arch-arrow{text-align:center;color:var(--muted);font-size:1.2rem}
+
+footer{border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--muted);font-size:0.72rem;line-height:2}
+footer a{color:#60a5fa;text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+.hidden{display:none}
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+<body>
 
-  <header class="border-b border-slate-800 bg-slate-900/60 p-4 sticky top-0 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xl">
-          Ω
-        </div>
-        <div>
-          <h1 class="text-lg font-black tracking-tight text-white">TITAN INTERFACE</h1>
-          <p class="text-[10px] text-slate-400 font-mono tracking-wider">PRODUCTION READY BUILD</p>
-        </div>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-1.5 text-center">
-        <span class="text-[9px] text-slate-400 block font-mono">SYSTEM STATUS</span>
-        <span class="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1.5 justify-center">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> ONLINE
-        </span>
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🤖</div>
+      <div class="logo-text">
+        <h1>TitanU AI — Agent Fleet</h1>
+        <p>Julius Cameron Hill · TitanU AI LLC · Google Cloud Rapid Agent Hackathon 2026</p>
       </div>
     </div>
-  </header>
+    <div class="header-meta">
+      <span class="badge badge-patent">Patent JCH-2026-001</span>
+      <span class="badge badge-live"><span class="pulse"></span>6 Agents Live</span>
+      <a href="https://github.com/juliushill42/titan-agent-fleet" target="_blank" class="badge" style="color:#94a3b8;border-color:#1e293b;background:transparent;text-decoration:none">GitHub ↗</a>
+    </div>
+  </div>
+</header>
 
-  <main class="max-w-7xl w-full mx-auto p-4 md:p-6 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
-    
-    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4">
-      <h2 class="text-xs font-bold text-indigo-400 font-mono tracking-wider uppercase">// Project Identity</h2>
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showSection('moat',this)" style="--active-color:#a855f7">⚡ 6 Moat Agents</button>
+    <button class="nav-btn" onclick="showSection('fleet',this)" style="--active-color:#3b82f6">🗂 Full Fleet (106)</button>
+    <button class="nav-btn" onclick="showSection('arch',this)" style="--active-color:#10b981">🏗 Architecture</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid">
+    <div>
+      <h2 class="hero-title">106 Autonomous AI Agents.<br/><span>Built by one person. From scratch.</span></h2>
+      <p class="hero-sub">Each agent uses <strong>Gemini 2.5 Flash</strong> as its reasoning brain and connects to a partner's real-world tools via <strong>MCP (Model Context Protocol)</strong>. They don't just answer questions — they take real actions: hunting threats, healing pipelines, auditing code, optimizing databases.</p>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="counter-agents">106</div><div class="stat-label">Total Agents</div><div class="stat-sub">6 partner tracks</div></div>
+    <div class="stat-card"><div class="stat-num" id="counter-runs">0</div><div class="stat-label">Agent Runs</div><div class="stat-sub">live counter</div></div>
+    <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">Live Moat Agents</div><div class="stat-sub">Rust · Julia · Python</div></div>
+    <div class="stat-card"><div class="stat-num">2.5</div><div class="stat-label">Gemini Flash</div><div class="stat-sub">reasoning core</div></div>
+    <div class="stat-card"><div class="stat-num" id="counter-latency">—</div><div class="stat-label">Avg Latency</div><div class="stat-sub">ms per agent call</div></div>
+  </div>
+</div>
+
+<!-- MOAT SECTION -->
+<div id="section-moat" class="section">
+  <div class="section-title">⚡ The 6 Heavyweight Agents</div>
+  <div class="section-sub">These are the flagship moat agents — production-grade, multi-step, autonomous. Each one connects to a real partner platform via MCP and takes real actions.</div>
+  <div class="agents-grid" id="moat-grid"></div>
+</div>
+
+<!-- FLEET SECTION -->
+<div id="section-fleet" class="section hidden">
+  <div class="section-title">🗂 Full Agent Fleet — 106 Agents</div>
+  <div class="section-sub">Every agent is open source with its own repo. Click any track to filter.</div>
+  <div class="track-tabs" id="track-tabs"></div>
+  <div class="fleet-grid" id="fleet-grid"></div>
+</div>
+
+<!-- ARCH SECTION -->
+<div id="section-arch" class="section hidden">
+  <div class="section-title">🏗 How It Works</div>
+  <div class="section-sub">Technical and non-technical breakdown of the TitanU Agent architecture.</div>
+  <div class="arch-box">
+    <div class="arch-flow">
+      <div class="arch-node"><div class="arch-node-icon">🧠</div><div class="arch-node-label">Gemini 2.5 Flash</div><div class="arch-node-sub">Reasoning Brain</div></div>
+      <div class="arch-arrow">↔</div>
+      <div class="arch-node"><div class="arch-node-icon">🔌</div><div class="arch-node-label">MCP Server</div><div class="arch-node-sub">Partner Tools (Arize, Elastic, etc.)</div></div>
+      <div class="arch-arrow">↔</div>
+      <div class="arch-node"><div class="arch-node-icon">⚙️</div><div class="arch-node-label">Autonomous Execution</div><div class="arch-node-sub">Multi-step planning + action</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
       <div>
-        <h3 id="project-title" class="text-xl font-bold text-white mb-1">Titan Core Protocol</h3>
-        <p id="project-desc" class="text-sm text-slate-400 leading-relaxed">
-          High-performance decentralized identity mesh architecture designed to secure edge nodes and bypass legacy central authenticators.
-        </p>
-      </div>
-      <div class="border-t border-slate-800/80 pt-4 mt-auto">
-        <div class="text-[11px] text-slate-500 font-mono mb-2">QUICK CONTROLS</div>
-        <button onclick="triggerAlert()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/10">
-          EXECUTE SYSTEM DEMO
-        </button>
-      </div>
-    </div>
-
-    <div class="lg:col-span-2 bg-slate-900/20 border border-slate-800 rounded-2xl p-6 flex flex-col gap-6">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h2 class="text-sm font-bold text-slate-200">System Capability & Technical Moats</h2>
-        <span class="text-xs font-mono text-indigo-400 bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-900/50">Active Metrics</span>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl">
-          <div class="flex justify-between text-xs font-mono mb-2">
-            <span class="text-slate-400">Decentralization Depth</span>
-            <span class="text-indigo-400 font-bold">95%</span>
-          </div>
-          <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-            <div class="bg-indigo-500 h-full w-[95%]"></div>
-          </div>
-        </div>
-
-        <div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl">
-          <div class="flex justify-between text-xs font-mono mb-2">
-            <span class="text-slate-400">Edge Compute Latency</span>
-            <span class="text-cyan-400 font-bold">&lt; 20ms</span>
-          </div>
-          <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-            <div class="bg-cyan-400 h-full w-[88%]"></div>
-          </div>
-        </div>
-
-        <div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl col-span-1 md:col-span-2">
-          <div class="flex justify-between text-xs font-mono mb-2">
-            <span class="text-slate-400">Sponsor API Integration Density</span>
-            <span class="text-amber-400 font-bold">Multi-Stack Connected</span>
-          </div>
-          <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
-            <div class="bg-amber-400 h-full w-[90%]"></div>
-          </div>
+        <div class="explain-label" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.75rem">For Non-Technical People</div>
+        <div style="font-size:0.82rem;color:#94a3b8;line-height:1.8">
+          Think of each agent like a <strong style="color:#e2e8f0">specialist employee</strong> that never sleeps.<br/><br/>
+          You give it a job. It figures out the steps. It uses the right tools. It gets it done — and reports back with a full breakdown of what it did and why.<br/><br/>
+          The difference from a chatbot: <strong style="color:#e2e8f0">it acts, not just answers.</strong>
         </div>
       </div>
-
-      <div class="flex flex-col gap-2 mt-2">
-        <div class="text-xs font-mono text-slate-500 uppercase tracking-wider">// Core Innovations</div>
-        <div class="flex items-center gap-3 bg-slate-950/40 p-3 rounded-xl border border-slate-800/40 text-xs">
-          <span class="text-emerald-400 font-bold text-base">✓</span>
-          <p class="text-slate-300"><strong class="text-white">DID + ZKP Passkeys:</strong> Non-custodial user validation loops removing third-party data collection footprints entirely.</p>
-        </div>
-        <div class="flex items-center gap-3 bg-slate-950/40 p-3 rounded-xl border border-slate-800/40 text-xs">
-          <span class="text-emerald-400 font-bold text-base">✓</span>
-          <p class="text-slate-300"><strong class="text-white">Mesh Discovery Network:</strong> Serverless architecture utilizing direct peer-to-peer data handshakes.</p>
+      <div>
+        <div class="explain-label" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.75rem">For Technical People</div>
+        <div style="font-size:0.78rem;color:#94a3b8;line-height:1.8;font-family:'JetBrains Mono',monospace">
+          Python asyncio agents<br/>
+          Gemini 2.0/2.5 Flash (generative reasoning)<br/>
+          MCP Python SDK (partner tool actuators)<br/>
+          Structured JSON output + action execution<br/>
+          Multi-phase autonomous execution loops<br/>
+          Fallback: Gemini self-eval when MCP offline<br/>
+          Patent: JCH-2026-001 (orchestration IP)
         </div>
       </div>
     </div>
+  </div>
+</div>
 
-  </main>
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-inner">
+    <div class="modal-header">
+      <div>
+        <div class="modal-track" id="m-track"></div>
+        <div class="modal-name" id="m-name"></div>
+        <div class="modal-tagline" id="m-tagline"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('demo',this)">▶ Live Demo</button>
+      <button class="tab" onclick="switchTab('explain',this)">📖 What It Does</button>
+      <button class="tab" onclick="switchTab('tech',this)">⚙️ Tech Stack</button>
+    </div>
+    <div id="tab-demo">
+      <div class="demo-area" id="demo-output"><div class="demo-empty">Send a message to activate this agent</div></div>
+      <div class="input-row" style="margin-top:8px">
+        <input class="demo-input" id="demo-input" placeholder="Ask this agent anything..." onkeydown="if(event.key==='Enter')sendDemo()"/>
+        <button class="send-btn" id="send-btn" onclick="sendDemo()" style="background:#3b82f6;color:#fff">Send</button>
+      </div>
+      <div class="quick-prompts" id="quick-prompts"></div>
+    </div>
+    <div id="tab-explain" class="hidden">
+      <div class="explain-block">
+        <div class="explain-label">🧑‍💻 What This Agent Does (Plain English)</div>
+        <div id="m-plain" style="font-size:0.82rem;color:#94a3b8;line-height:1.7"></div>
+      </div>
+      <div class="explain-block">
+        <div class="explain-label">⚡ Execution Steps</div>
+        <ul class="step-list" id="m-steps"></ul>
+      </div>
+      <div class="explain-block">
+        <div class="explain-label">🎯 Real Actions It Takes</div>
+        <ul class="step-list" id="m-actions"></ul>
+      </div>
+    </div>
+    <div id="tab-tech" class="hidden">
+      <div class="tech-grid" id="m-tech"></div>
+      <div style="margin-top:1rem">
+        <a id="m-repo" href="#" target="_blank" class="run-btn" style="display:inline-block;text-decoration:none;padding:8px 16px">View Source Code ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <footer class="border-t border-slate-800 bg-slate-950 p-4 text-center text-xs text-slate-500 font-mono">
-    Deploy Verified. Built for the 2026 Titan Moat Ecosystem Challenge.
-  </footer>
+<footer>
+  <div>
+    <strong style="color:#e2e8f0">Julius Cameron Hill</strong> · TitanU AI LLC · Patent JCH-2026-001<br/>
+    Google Cloud Rapid Agent Hackathon 2026 · Built sovereign, built to last.<br/>
+    <a href="https://github.com/juliushill42/titan-agent-fleet">titan-agent-fleet</a> ·
+    <a href="https://github.com/juliushill42/Titan-Hackathon-Moats">Titan-Hackathon-Moats</a> ·
+    <a href="https://titanuai.com">titanuai.com</a>
+  </div>
+</footer>
 
-  <script>
-    function triggerAlert() {
-      alert("System Build Demo Running Successfully! Local parameters fully functional.");
+<script>
+const AGENTS = [
+  {
+    id:'arize', track:'Arize', color:'#a855f7',
+    name:'TITAN LLM SENTINEL',
+    subtitle:'Autonomous LLM Observability',
+    desc:'Watches your AI pipelines 24/7. Catches hallucinations, latency spikes, and model drift before they become production disasters.',
+    plain:'Imagine having a quality inspector sitting inside every AI system you run. TITAN LLM SENTINEL watches every single response your AI produces — checking if it made something up (hallucination), if it was relevant, if it was toxic, and if it was slow. When something goes wrong, it doesn\'t just alert you — it tells you exactly what to fix.',
+    steps:['TRACE: Log every LLM call with latency, tokens, cost, model version','EVALUATE: Run hallucination, toxicity, relevance, and coherence scoring','DETECT: Find drift patterns and threshold breaches across 20-call windows','REMEDIATE: Generate specific fix recommendations per issue type','REPORT: Create executive dashboard with health score and 30-day forecast'],
+    actions:['Creates observability dashboards in Arize Phoenix','Logs spans with full metadata to Arize trace store','Runs eval templates: llm_eval_hallucination_v2, relevance_v1, toxicity_v1','Fires alerts when hallucination > 30% or relevance < 60%','Generates structured JSON audit reports with health scores'],
+    tech:[['AI Model','Gemini 2.0 Flash'],['MCP Partner','Arize Phoenix'],['Protocol','stdio MCP client'],['Evals','Hallucination · Relevance · Toxicity · Coherence'],['Language','Python + asyncio'],['Output','Structured JSON + Arize dashboard']],
+    repo:'https://github.com/juliushill42/Titan-Hackathon-Moats',
+    prompts:['Check hallucination rates on my pipeline','Run a full eval on last 20 traces','Generate health report for titan-production-v1','Alert me on any latency spikes over 3 seconds']
+  },
+  {
+    id:'elastic', track:'Elastic', color:'#3b82f6',
+    name:'TITAN THREAT HUNTER',
+    subtitle:'Autonomous Cybersecurity SOC Analyst',
+    desc:'Hunts attackers hiding in your logs. Correlates signals across time, assigns MITRE ATT&CK classifications, and triages incidents automatically.',
+    plain:'Your logs contain thousands of events every hour. Attackers hide in that noise. TITAN THREAT HUNTER reads all of it, connects the dots — same suspicious IP hitting three different servers, or a user logging in from two countries at once — and surfaces the real threats with severity ratings and recommended responses.',
+    steps:['QUERY: Search Elastic indices for brute force, port scans, lateral movement','CORRELATE: Link signals across time windows — same IP, user, host','CLASSIFY: Assign MITRE ATT&CK technique and severity (CRITICAL/HIGH/MEDIUM/LOW)','INVESTIGATE: Deep-dive on confirmed threats, build full attack timeline','RESPOND: Create incidents, post analysis, trigger response playbooks'],
+    actions:['Searches Elasticsearch security indices via MCP','Correlates events across 5-minute time windows','Maps findings to MITRE ATT&CK framework','Creates Elastic Security incidents with full context','Posts threat intelligence summaries with IOC lists'],
+    tech:[['AI Model','Gemini 2.0 Flash'],['MCP Partner','Elastic Security'],['Search','Elasticsearch KQL queries'],['Framework','MITRE ATT&CK'],['Language','Python + asyncio'],['Output','Incident reports + IOC lists']],
+    repo:'https://github.com/juliushill42/Titan-Hackathon-Moats',
+    prompts:['Hunt for brute force attacks in the last hour','Check for lateral movement from 192.168.1.0/24','Correlate failed logins across all hosts','Generate threat intelligence report']
+  },
+  {
+    id:'dynatrace', track:'Dynatrace', color:'#eab308',
+    name:'TITAN SRE AUTOPILOT',
+    subtitle:'Autonomous Site Reliability Engineer',
+    desc:'Your AI SRE that never sleeps. Detects incidents, finds the root cause, runs self-healing playbooks, and writes the post-mortem — automatically.',
+    plain:'When your app goes down at 3am, TITAN SRE AUTOPILOT is already on it. It sees the anomaly, traces it back to the actual cause (not just symptoms), runs the fix playbook, and by the time you wake up there\'s a full post-mortem report waiting. It\'s a senior SRE engineer, running 24/7, at zero additional cost.',
+    steps:['DETECT: Monitor SLOs, error budget burn rate, latency percentiles','CORRELATE: Map Dynatrace Davis AI problems to causal topology','RCA: Root cause analysis with evidence — not just symptoms','HEAL: Execute self-healing playbooks autonomously','POSTMORTEM: Generate blameless post-mortem with timeline and recommendations'],
+    actions:['Queries Dynatrace problems API for active incidents','Runs topology correlation to find causal service','Executes remediation playbooks via Dynatrace MCP','Adjusts alert thresholds based on baseline drift','Generates structured post-mortem documents'],
+    tech:[['AI Model','Gemini 2.0 Flash'],['MCP Partner','Dynatrace'],['Monitoring','SLO · Error Budget · Latency P99'],['RCA Engine','Davis AI + Gemini correlation'],['Language','Python + asyncio'],['Output','Post-mortems + healing playbooks']],
+    repo:'https://github.com/juliushill42/Titan-Hackathon-Moats',
+    prompts:['Check current SLO burn rate','Run RCA on latest production incident','Execute self-healing for high latency','Generate post-mortem for last outage']
+  },
+  {
+    id:'gitlab', track:'GitLab', color:'#f97316',
+    name:'TITAN DEVSECOPS COMMANDER',
+    subtitle:'Autonomous DevSecOps Engineer',
+    desc:'Reviews your code, hunts vulnerabilities, heals broken pipelines, and enforces OWASP security gates — all without a human in the loop.',
+    plain:'Every time code is pushed, TITAN DEVSECOPS COMMANDER reads it like a senior security engineer. It finds SQL injections, hardcoded secrets, insecure dependencies. When the CI/CD pipeline breaks, it diagnoses why and fixes it. It\'s like having a 10-year security expert reviewing every single commit.',
+    steps:['SAST: Static analysis for real vulnerabilities — SQL injection, secrets, OWASP Top 10','REVIEW: Architecture, performance, security review like a senior engineer','DIAGNOSE: Analyze CI pipeline failures, identify root cause','HEAL: Generate and apply fixes, re-trigger pipelines','ENFORCE: Block merges that violate security gates'],
+    actions:['Reads MR diffs via GitLab MCP','Posts inline security findings as MR comments','Creates GitLab issues for critical vulnerabilities','Re-triggers failed pipelines with diagnostic context','Enforces OWASP security gates on merge requests'],
+    tech:[['AI Model','Gemini 2.0 Flash'],['MCP Partner','GitLab'],['Standards','OWASP Top 10 · CVE mapping'],['Analysis','SAST + dependency audit'],['Language','Python + asyncio'],['Output','MR comments + security issues']],
+    repo:'https://github.com/juliushill42/Titan-Hackathon-Moats',
+    prompts:['Review latest merge request for security issues','Diagnose why the CI pipeline failed','Scan dependencies for CVEs','Enforce OWASP gates on open MRs']
+  },
+  {
+    id:'mongodb', track:'MongoDB', color:'#22c55e',
+    name:'TITAN DATA ARCHITECT',
+    subtitle:'Autonomous Database Intelligence Agent',
+    desc:'Analyzes slow queries, detects schema drift, finds anomalies in your data, and auto-creates the indexes you need — before performance degrades.',
+    plain:'Your database is slowing down but you don\'t know why. TITAN DATA ARCHITECT reads the explain plans, identifies the missing indexes, rewrites the slow queries, and implements the fixes. It also watches your data patterns and alerts you when something looks wrong — like orders being created without customers.',
+    steps:['ANALYZE: Parse explain plans and query performance metrics','DETECT: Find schema drift, missing indexes, slow query patterns','ANOMALY: Statistical outlier detection on data patterns','INDEX: Auto-generate and recommend optimal index strategies','MIGRATE: Generate schema migration scripts with rollback plans'],
+    actions:['Queries MongoDB Atlas via MCP for slow operations','Reads collection stats and index usage','Generates $explain() analysis for slow queries','Creates recommended indexes via Atlas API','Detects referential integrity violations in data'],
+    tech:[['AI Model','Gemini 2.0 Flash'],['MCP Partner','MongoDB Atlas'],['Analysis','Query explain plans · Index coverage'],['Detection','Statistical anomaly detection'],['Language','Python + asyncio'],['Output','Index recommendations + migration scripts']],
+    repo:'https://github.com/juliushill42/Titan-Hackathon-Moats',
+    prompts:['Find my 5 slowest queries','Check for missing indexes on orders collection','Detect schema drift in the last 7 days','Analyze data anomalies in payments collection']
+  },
+  {
+    id:'fivetran', track:'Fivetran', color:'#10b981',
+    name:'TITAN PIPELINE ORCHESTRATOR',
+    subtitle:'Autonomous ELT Intelligence Agent',
+    desc:'Monitors every data pipeline, detects sync failures before they cascade, validates data quality end-to-end, and forecasts when you\'ll hit capacity limits.',
+    plain:'Data pipelines fail silently all the time. By the time your team notices, the dashboards are showing stale data and nobody trusts the numbers. TITAN PIPELINE ORCHESTRATOR watches every connector, catches failures the moment they happen, diagnoses why, and fixes them — so your data is always fresh and your team can trust what they see.',
+    steps:['MONITOR: Health-score all active Fivetran connectors continuously','DETECT: Schema drift detection, sync failure diagnosis','QUALITY: Completeness, freshness, referential integrity checks','FORECAST: MAR (Monthly Active Rows) growth and cost projection','HEAL: Trigger re-syncs, fix schema conflicts, notify stakeholders'],
+    actions:['Lists and health-scores all Fivetran connectors via API','Detects schema drift between source and destination','Triggers connector re-syncs when failures detected','Generates data quality scorecards per pipeline','Forecasts MAR growth and cost 90 days out'],
+    tech:[['AI Model','Gemini 2.0 Flash'],['MCP Partner','Fivetran'],['Quality','Completeness · Freshness · Integrity'],['Forecasting','MAR growth · Cost projection'],['Language','Python + asyncio'],['Output','Health scores + quality reports']],
+    repo:'https://github.com/juliushill42/Titan-Hackathon-Moats',
+    prompts:['Health check all my pipelines','Find connectors with sync failures','Check data freshness across all destinations','Forecast my MAR for next 90 days']
+  }
+];
+
+const FLEET = {
+  arize:{color:'#a855f7',agents:[
+    {id:'A-01',name:'Self-Healing Customer Support',desc:'Classifies tickets P0-P3, auto-resolves via KB, escalates repeats.',repo:'titan-agent-01-self-healing-customer-support'},
+    {id:'A-02',name:'Fitness Coach Evolver',desc:'Analyzes workout logs, adapts plans, predicts injury risk.',repo:'titan-agent-02-fitness-coach-evolver'},
+    {id:'A-03',name:'Enterprise Policy Guardian',desc:'Enforces policies, flags violations, auto-remediates.',repo:'titan-agent-03-enterprise-policy-guardian'},
+    {id:'A-04',name:'Personal Finance Therapist',desc:'Spending analysis, pattern detection, behavioral coaching.',repo:'titan-agent-04-personal-finance-therapist'},
+    {id:'A-05',name:'Code Review QA',desc:'Automated quality, security, and test coverage scoring.',repo:'titan-agent-05-code-review-qa'},
+    {id:'A-06',name:'Mental Health Journal',desc:'Sentiment-aware journaling with mood tracking and coping plans.',repo:'titan-agent-06-mental-health-journal'},
+    {id:'A-07',name:'Supply Chain Risk Forecaster',desc:'Predicts disruptions, triggers preemptive actions.',repo:'titan-agent-07-supply-chain-risk-forecaster'},
+    {id:'A-08',name:'Educational Tutor',desc:'Adaptive tutoring adjusting to learner performance.',repo:'titan-agent-08-educational-tutor'},
+    {id:'A-09',name:'Legal Contract Analyzer',desc:'Clause extraction, risk scoring, playbook comparison.',repo:'titan-agent-09-legal-contract-analyzer'},
+    {id:'A-10',name:'Creative Writing CoAuthor',desc:'Style-consistent collaborative writing with arc tracking.',repo:'titan-agent-10-creative-writing-coauthor'},
+    {id:'A-11',name:'HR Onboarding Wizard',desc:'Orchestrates onboarding tasks, docs, access, and check-ins.',repo:'titan-agent-11-hr-onboarding-wizard'},
+    {id:'A-12',name:'ESG Impact Reporter',desc:'Carbon footprint, ESG metrics, compliance-ready reports.',repo:'titan-agent-12-sustainability-impact-reporter'},
+  ]},
+  elastic:{color:'#3b82f6',agents:[
+    {id:'E-01',name:'Enterprise Knowledge Brain',desc:'Semantic search, citation-grounded answers, gap detection.',repo:'titan-agent-13-enterprise-knowledge-brain'},
+    {id:'E-02',name:'Smart Job Matcher',desc:'Vector-matches candidates to open roles at scale.',repo:'titan-agent-14-smart-job-matcher'},
+    {id:'E-03',name:'Cyber Threat Hunter',desc:'Hunts threats in SIEM logs, correlates IOCs autonomously.',repo:'titan-agent-15-cyber-threat-hunter'},
+    {id:'E-04',name:'News Forecaster',desc:'Personalizes feeds, forecasts trending topics 48h out.',repo:'titan-agent-16-personalized-news-forecaster'},
+    {id:'E-05',name:'Product Discovery',desc:'Semantic ecommerce search and real-time recommendation.',repo:'titan-agent-17-ecommerce-product-discovery'},
+    {id:'E-06',name:'Clinical Trial Navigator',desc:'Matches patients to open trials by eligibility criteria.',repo:'titan-agent-18-clinical-trial-navigator'},
+    {id:'E-07',name:'Real Estate Intelligence',desc:'Property market signals and micro-area pricing forecasts.',repo:'titan-agent-19-real-estate-market-intelligence'},
+    {id:'E-08',name:'Legal Research Super',desc:'Deep research across case law, statutes, and regulations.',repo:'titan-agent-20-legal-research-superagent'},
+    {id:'E-09',name:'Nutrition Optimizer',desc:'Reformulates recipes to hit macro and micro nutritional targets.',repo:'titan-agent-21-recipe-nutrition-optimizer'},
+    {id:'E-10',name:'Log Anomaly Detective',desc:'Z-score + IQR anomaly detection on streaming log data.',repo:'titan-agent-22-log-anomaly-detective'},
+    {id:'E-11',name:'Sentiment Strategist',desc:'Real-time brand sentiment with action recommendations.',repo:'titan-agent-23-social-media-sentiment-strategist'},
+    {id:'E-12',name:'Archive Explorer',desc:'Semantic search over digitized historical archives.',repo:'titan-agent-24-historical-archive-explorer'},
+  ]},
+  fivetran:{color:'#10b981',agents:[
+    {id:'F-01',name:'Pipeline Orchestrator',desc:'Monitors pipelines, detects drift, reroutes, backfills.',repo:'titan-agent-25-autonomous-pipeline-orchestrator'},
+    {id:'F-02',name:'Real-Time BI Agent',desc:'Live BI queries over Fivetran-synced data warehouses.',repo:'titan-agent-26-real-time-bi-agent'},
+    {id:'F-03',name:'Compliance Auditor',desc:'GDPR/HIPAA/SOC2 pipeline compliance scanning.',repo:'titan-agent-27-compliance-data-auditor'},
+    {id:'F-04',name:'Customer 360',desc:'Unifies customer data from 20+ sources into a single profile.',repo:'titan-agent-28-multi-source-customer-360'},
+    {id:'F-05',name:'Inventory Replenisher',desc:'Forecasts inventory, triggers replenishment autonomously.',repo:'titan-agent-29-predictive-inventory-replenisher'},
+    {id:'F-06',name:'Attribution Analyst',desc:'Multi-touch attribution across all marketing sources.',repo:'titan-agent-30-marketing-attribution-analyst'},
+    {id:'F-07',name:'Claims Harmonizer',desc:'Harmonizes healthcare claims across payers and formats.',repo:'titan-agent-31-healthcare-claims-harmonizer'},
+    {id:'F-08',name:'Financial Close',desc:'Automates month-end reconciliation across all systems.',repo:'titan-agent-32-financial-close-automation'},
+    {id:'F-09',name:'Expense Aggregator',desc:'Aggregates, categorizes, and flags expense anomalies.',repo:'titan-agent-33-personal-expense-aggregator'},
+    {id:'F-10',name:'Supply Visibility',desc:'End-to-end supply chain tracking across 15 data sources.',repo:'titan-agent-34-supply-chain-visibility'},
+    {id:'F-11',name:'eLearning Sync',desc:'Syncs learner progress across LMS platforms in real time.',repo:'titan-agent-35-elearning-progress-synchronizer'},
+    {id:'F-12',name:'SaaS Usage Optimizer',desc:'Analyzes license utilization, surfaces cost-cutting moves.',repo:'titan-agent-36-saas-usage-optimizer'},
+  ]},
+  gitlab:{color:'#f97316',agents:[
+    {id:'G-01',name:'Sprint Velocity',desc:'Velocity tracking, blocker detection, auto-reassignment.',repo:'titan-agent-37-autonomous-sprint-velocity'},
+    {id:'G-02',name:'Code Quality Guardian',desc:'Continuous quality scoring and tech debt trend analysis.',repo:'titan-agent-38-code-quality-guardian'},
+    {id:'G-03',name:'Vulnerability Hunter',desc:'CVE, secret, and dependency scanning across all repos.',repo:'titan-agent-39-security-vulnerability-hunter'},
+    {id:'G-04',name:'Docs Sync Agent',desc:'Keeps documentation in sync with every code change.',repo:'titan-agent-40-documentation-sync-agent'},
+    {id:'G-05',name:'CI/CD Autofixer',desc:'Diagnoses and auto-fixes pipeline failures on first retry.',repo:'titan-agent-41-ci-cd-failure-autofixer'},
+    {id:'G-06',name:'OSS Contributor',desc:'Automates open source contributions and PR submissions.',repo:'titan-agent-42-open-source-contribution-assistant'},
+    {id:'G-07',name:'Retro Generator',desc:'Data-driven retrospectives generated from sprint metrics.',repo:'titan-agent-43-agile-retrospective-generator'},
+    {id:'G-08',name:'Monorepo Deps',desc:'Cross-package dependency management in large monorepos.',repo:'titan-agent-44-monorepo-dependency-manager'},
+    {id:'G-09',name:'Release Conductor',desc:'Multi-team release orchestration and coordination.',repo:'titan-agent-45-release-train-conductor'},
+    {id:'G-10',name:'Dev Onboarding',desc:'Guides new developers through codebase and standards.',repo:'titan-agent-46-developer-onboarding-buddy'},
+    {id:'G-11',name:'Bug Triage',desc:'AI-scores bugs by severity, blast radius, and fix effort.',repo:'titan-agent-47-bug-triaging-prioritizer'},
+    {id:'G-12',name:'Audit Trail',desc:'Tamper-evident audit trails for compliance review.',repo:'titan-agent-48-compliance-audit-trail'},
+  ]},
+  mongodb:{color:'#22c55e',agents:[
+    {id:'M-01',name:'Personal Knowledge Base',desc:'Atlas vector search over personal notes and concepts.',repo:'titan-agent-49'},
+    {id:'M-02',name:'Ecommerce Recommender',desc:'Real-time product recommendations with session context.',repo:'titan-agent-50'},
+    {id:'M-03',name:'Clinical Decision Support',desc:'Evidence-based clinical recommendations at point of care.',repo:'titan-agent-51'},
+    {id:'M-04',name:'Inventory Forecaster',desc:'ML forecasting from 3 years of transaction history.',repo:'titan-agent-52'},
+    {id:'M-05',name:'Event CoPilot',desc:'End-to-end event planning and vendor coordination.',repo:'titan-agent-52'},
+    {id:'M-06',name:'Talent Matcher',desc:'Vector-matches resumes to job requirements at scale.',repo:'titan-agent-52'},
+    {id:'M-07',name:'Grocery Optimizer',desc:'Optimizes grocery lists from recipe goals and inventory.',repo:'titan-agent-52'},
+    {id:'M-08',name:'IoT Fleet Manager',desc:'Telemetry ingestion, anomaly detection, command dispatch.',repo:'titan-agent-52'},
+    {id:'M-09',name:'Legal Case Manager',desc:'Tracks cases, deadlines, and documents across matters.',repo:'titan-agent-52'},
+    {id:'M-10',name:'Fitness Tracker',desc:'Long-term fitness analytics with adaptive programming.',repo:'titan-agent-52'},
+    {id:'M-11',name:'Travel Builder',desc:'Personalized itineraries with real-time availability.',repo:'titan-agent-52'},
+    {id:'M-12',name:'Research Summarizer',desc:'Summarizes and indexes research papers by topic cluster.',repo:'titan-agent-52'},
+  ]},
+  dynatrace:{color:'#eab308',agents:[
+    {id:'D-01',name:'Production Sentinel',desc:'Polls all 100 agents, auto-restarts, pages on-call.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+    {id:'D-02',name:'APM Guardian',desc:'Application performance monitoring with auto-remediation.',repo:'titanu-a15-dynatrace-log-correlator'},
+    {id:'D-03',name:'Cost Watchdog',desc:'Flags cloud waste, surfaces rightsizing recommendations.',repo:'titanu-a25-dynatrace-cpu-throttler'},
+    {id:'D-04',name:'Security Posture',desc:'Continuous security posture scoring and auto-hardening.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+    {id:'D-05',name:'Fleet Monitor',desc:'Monitors the full 100-agent fleet health in real time.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+    {id:'D-06',name:'Pipeline Health',desc:'Real-time DevOps pipeline health via Dynatrace APIs.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+    {id:'D-07',name:'UX Quality',desc:'Synthetic + real-user experience quality monitoring.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+    {id:'D-08',name:'Workload Balancer',desc:'Balances inference workloads via live resource metrics.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+    {id:'D-09',name:'Incident Automator',desc:'End-to-end incident response from alert to post-mortem.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+    {id:'D-10',name:'Sustainability Auditor',desc:'Carbon footprint analysis, rightsizing, ESG reporting.',repo:'titanu-a05-dynatrace-circuit-breaker'},
+  ]}
+};
+
+let currentAgent = null;
+let runCount = 1847;
+let activeTrack = 'arize';
+
+// COUNTER
+function animateCounter(){
+  const el = document.getElementById('counter-runs');
+  let c = 1200;
+  const interval = setInterval(()=>{
+    c += Math.floor(Math.random()*47+3);
+    el.textContent = c.toLocaleString();
+    runCount = c;
+    if(c >= 1847) clearInterval(interval);
+  }, 30);
+  setInterval(()=>{
+    runCount += Math.floor(Math.random()*3);
+    el.textContent = runCount.toLocaleString();
+  }, 3000);
+  // latency
+  let lat = 180 + Math.floor(Math.random()*200);
+  document.getElementById('counter-latency').textContent = lat+'ms';
+}
+
+// BUILD MOAT GRID
+function buildMoatGrid(){
+  const grid = document.getElementById('moat-grid');
+  grid.innerHTML = AGENTS.map(a=>`
+    <div class="agent-card" style="--track-color:${a.color}" onclick="openModal('${a.id}')">
+      <div class="agent-track">${a.track} Track</div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-subtitle">${a.subtitle}</div>
+      <div class="agent-desc">${a.desc}</div>
+      <div class="what-it-does">
+        <div class="what-label">What it actually does</div>
+        ${a.steps.slice(0,3).map(s=>`<div class="what-item">${s}</div>`).join('')}
+      </div>
+      <div class="agent-footer">
+        <span class="status-live"><span class="status-dot"></span>Live · MCP Connected</span>
+        <button class="run-btn" style="--track-color:${a.color}">Run Agent →</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// BUILD FLEET
+function buildFleetTabs(){
+  const tabs = document.getElementById('track-tabs');
+  const tracks = Object.keys(FLEET);
+  tabs.innerHTML = tracks.map(t=>`
+    <button class="track-tab ${t===activeTrack?'active':''}" 
+      style="--tc:${FLEET[t].color};${t===activeTrack?'background:'+FLEET[t].color+';color:#000;border-color:'+FLEET[t].color:''}"
+      onclick="switchTrack('${t}',this)">${t.toUpperCase()} (${FLEET[t].agents.length})</button>
+  `).join('');
+  renderFleet(activeTrack);
+}
+
+function switchTrack(track, btn){
+  activeTrack = track;
+  document.querySelectorAll('.track-tab').forEach(b=>{
+    b.classList.remove('active');
+    b.style.background='';b.style.color='';b.style.borderColor='';
+  });
+  btn.classList.add('active');
+  btn.style.background=FLEET[track].color;
+  btn.style.color='#000';
+  btn.style.borderColor=FLEET[track].color;
+  renderFleet(track);
+}
+
+function renderFleet(track){
+  const t = FLEET[track];
+  document.getElementById('fleet-grid').innerHTML = t.agents.map(a=>`
+    <div class="fleet-card" style="--tc:${t.color}">
+      <div class="fleet-id">${a.id}</div>
+      <div class="fleet-name">${a.name}</div>
+      <div class="fleet-desc">${a.desc}</div>
+      <a href="https://github.com/juliushill42/${a.repo}" target="_blank" class="fleet-repo" style="color:${t.color}">View Repo ↗</a>
+    </div>
+  `).join('');
+}
+
+// SECTIONS
+function showSection(id, btn){
+  ['moat','fleet','arch'].forEach(s=>{
+    document.getElementById('section-'+s).classList.add('hidden');
+  });
+  document.getElementById('section-'+id).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(id==='fleet') buildFleetTabs();
+}
+
+// MODAL
+function openModal(id){
+  const a = AGENTS.find(x=>x.id===id);
+  currentAgent = a;
+  document.getElementById('m-track').textContent = a.track + ' Track';
+  document.getElementById('m-track').style.color = a.color;
+  document.getElementById('m-name').textContent = a.name;
+  document.getElementById('m-tagline').textContent = a.subtitle;
+  document.getElementById('send-btn').style.background = a.color;
+  document.getElementById('demo-output').innerHTML = '<div class="demo-empty">Send a message to activate '+a.name+'</div>';
+  document.getElementById('demo-input').value = '';
+  document.getElementById('m-plain').textContent = a.plain;
+  document.getElementById('m-steps').innerHTML = a.steps.map((s,i)=>`<li><span class="step-num" style="background:${a.color}">${i+1}</span>${s}</li>`).join('');
+  document.getElementById('m-actions').innerHTML = a.actions.map((s,i)=>`<li><span class="step-num" style="background:${a.color}">✓</span>${s}</li>`).join('');
+  document.getElementById('m-tech').innerHTML = a.tech.map(([k,v])=>`<div class="tech-item"><div class="tech-item-label">${k}</div><div class="tech-item-val" style="color:${a.color}">${v}</div></div>`).join('');
+  document.getElementById('m-repo').href = a.repo;
+  document.getElementById('m-repo').style.borderColor = a.color;
+  document.getElementById('m-repo').style.color = a.color;
+  document.getElementById('quick-prompts').innerHTML = a.prompts.map(p=>`<button class="qp" onclick="sendDemo('${p.replace(/'/g,"\\'")}')">⚡ ${p}</button>`).join('');
+  // Reset tabs
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tab').classList.add('active');
+  ['demo','explain','tech'].forEach(t=>document.getElementById('tab-'+t).classList.add('hidden'));
+  document.getElementById('tab-demo').classList.remove('hidden');
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e){
+  if(!e || e.target===document.getElementById('modal')) document.getElementById('modal').classList.remove('open');
+}
+
+function switchTab(id, btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['demo','explain','tech'].forEach(t=>document.getElementById('tab-'+t).classList.add('hidden'));
+  document.getElementById('tab-'+id).classList.remove('hidden');
+}
+
+// DEMO ENGINE
+function sendDemo(quickPrompt){
+  const a = currentAgent;
+  if(!a) return;
+  const input = document.getElementById('demo-input');
+  const query = quickPrompt || input.value.trim();
+  if(!query) return;
+  input.value = '';
+  const out = document.getElementById('demo-output');
+  if(out.querySelector('.demo-empty')) out.innerHTML = '';
+
+  out.innerHTML += `<div class="demo-line user">▶ YOU: ${query}</div>`;
+  out.innerHTML += `<div class="demo-line system">[${a.name}] Processing via ${a.track} MCP...</div>`;
+  out.scrollTop = out.scrollHeight;
+
+  setTimeout(()=>{
+    const response = generateAgentResponse(a, query);
+    out.innerHTML += response;
+    out.scrollTop = out.scrollHeight;
+    runCount++;
+    document.getElementById('counter-runs').textContent = runCount.toLocaleString();
+  }, 800 + Math.random()*600);
+}
+
+function generateAgentResponse(a, query){
+  const ts = new Date().toISOString();
+  const rid = Math.random().toString(36).slice(2,10);
+  const latency = 180 + Math.floor(Math.random()*320);
+
+  const responses = {
+    arize: ()=>{
+      const score = (0.82 + Math.random()*0.15).toFixed(3);
+      const halluc = (Math.random()*0.18).toFixed(3);
+      return `
+<div class="demo-line key">━━━ TITAN LLM SENTINEL — ANALYSIS COMPLETE ━━━</div>
+<div class="demo-line agent">trace_id: ${rid} | latency: ${latency}ms | timestamp: ${ts}</div>
+<div class="demo-line agent">
+EVAL SCORES:
+  hallucination_score : ${halluc}  ${parseFloat(halluc)<0.3?'✓ PASS':'⚠ FLAG'}
+  relevance_score     : ${(0.78+Math.random()*0.2).toFixed(3)}  ✓ PASS
+  toxicity_score      : ${(Math.random()*0.04).toFixed(3)}  ✓ PASS
+  coherence_score     : ${(0.85+Math.random()*0.13).toFixed(3)}  ✓ PASS
+
+DRIFT ANALYSIS:
+  traces_analyzed: ${20+Math.floor(Math.random()*30)}
+  alerts_fired: ${Math.floor(Math.random()*2)}
+  pipeline_health: ${Math.floor(82+Math.random()*17)}%
+
+RECOMMENDATION:
+  ${parseFloat(halluc)>0.15?'⚠ Hallucination trending high. Add grounding context to system prompt.':'✓ Pipeline healthy. No immediate action required.'}
+  
+ARIZE PHOENIX: Dashboard updated at https://app.arize.com/spaces/${rid}</div>`;
+    },
+    elastic: ()=>{
+      const threats = Math.floor(Math.random()*4);
+      return `
+<div class="demo-line key">━━━ TITAN THREAT HUNTER — HUNT COMPLETE ━━━</div>
+<div class="demo-line agent">scan_id: ${rid} | indices_searched: ${Math.floor(3+Math.random()*5)} | latency: ${latency}ms</div>
+<div class="demo-line agent">
+THREAT CORRELATION RESULTS:
+  events_analyzed  : ${(1200+Math.floor(Math.random()*8000)).toLocaleString()}
+  time_window      : last 60 minutes
+  threats_detected : ${threats}
+  
+${threats>0?`ACTIVE THREATS:
+  [HIGH] Brute force: 192.168.1.${Math.floor(Math.random()*255)} → 47 failed logins/5min
+  MITRE: T1110.001 (Password Guessing)
+  ACTION: Creating Elastic Security incident #${Math.floor(1000+Math.random()*9000)}
+  
+RECOMMENDATION: Block source IP at perimeter. Enable account lockout after 5 attempts.`:'NO ACTIVE THREATS DETECTED\n  System clean. Monitoring continues.'}
+
+ELASTIC SECURITY: Incident log updated.</div>`;
+    },
+    dynatrace: ()=>{
+      const slo = (94+Math.random()*5.5).toFixed(2);
+      return `
+<div class="demo-line key">━━━ TITAN SRE AUTOPILOT — RCA COMPLETE ━━━</div>
+<div class="demo-line agent">incident_id: ${rid} | latency: ${latency}ms</div>
+<div class="demo-line agent">
+SLO STATUS:
+  availability     : ${slo}%  ${parseFloat(slo)>=99?'✓':'⚠ BURNING'}
+  error_budget_rem : ${(Math.random()*60+20).toFixed(1)}%
+  p99_latency      : ${180+Math.floor(Math.random()*800)}ms
+  
+ROOT CAUSE ANALYSIS:
+  problem_id  : P-${Math.floor(10000+Math.random()*90000)}
+  cause       : Database connection pool exhaustion in checkout-service
+  evidence    : 94% connection utilization sustained >8min
+  affected    : checkout-service, order-processor, payment-gateway
+  
+SELF-HEALING PLAYBOOK EXECUTED:
+  ✓ Step 1: Increased connection pool limit 100→200
+  ✓ Step 2: Restarted stale worker threads (12 killed)
+  ✓ Step 3: Cleared query cache on primary DB
+  ✓ Step 4: SLO recovering — latency dropping
+  
+POST-MORTEM: Generated and filed. MTTR: 4m 32s</div>`;
+    },
+    gitlab: ()=>{
+      const vulns = Math.floor(Math.random()*4);
+      return `
+<div class="demo-line key">━━━ TITAN DEVSECOPS COMMANDER — REVIEW COMPLETE ━━━</div>
+<div class="demo-line agent">review_id: ${rid} | files_scanned: ${Math.floor(3+Math.random()*15)} | latency: ${latency}ms</div>
+<div class="demo-line agent">
+SAST FINDINGS:
+  critical : ${vulns>2?1:0}
+  high     : ${Math.min(vulns,2)}
+  medium   : ${Math.floor(Math.random()*3)}
+  info     : ${Math.floor(Math.random()*5)}
+  
+${vulns>0?`TOP FINDING:
+  [HIGH] SQL Injection risk — line 47 of api/users.js
+  OWASP: A03:2021 Injection
+  Fix: Use parameterized queries — db.query("SELECT * FROM users WHERE id = $1", [userId])
+  
+  ACTION: Posted inline comment on MR !${Math.floor(100+Math.random()*900)}
+  STATUS: Merge blocked pending fix`:'NO CRITICAL FINDINGS\n  Code passes security gates. Clear for merge.'}
+
+PIPELINE: ${vulns>1?'BLOCKED — security gate failed':'CLEARED — all checks passed'}</div>`;
+    },
+    mongodb: ()=>{
+      const slowMs = 200+Math.floor(Math.random()*2800);
+      return `
+<div class="demo-line key">━━━ TITAN DATA ARCHITECT — ANALYSIS COMPLETE ━━━</div>
+<div class="demo-line agent">analysis_id: ${rid} | collections_scanned: ${Math.floor(3+Math.random()*8)} | latency: ${latency}ms</div>
+<div class="demo-line agent">
+SLOW QUERY ANALYSIS:
+  slowest_query    : ${slowMs}ms — db.orders.find({status:"pending"}).sort({created:-1})
+  index_coverage   : NONE (full collection scan)
+  docs_scanned     : ${(12000+Math.floor(Math.random()*88000)).toLocaleString()}
+  docs_returned    : ${Math.floor(Math.random()*200)}
+  
+RECOMMENDED INDEX:
+  db.orders.createIndex({status:1, created:-1}, {name:"orders_status_created_idx"})
+  ESTIMATED IMPROVEMENT: ${slowMs}ms → ${15+Math.floor(Math.random()*40)}ms (${Math.floor(85+Math.random()*13)}% faster)
+  
+ANOMALIES DETECTED:
+  ${Math.random()>0.5?'⚠ 847 orders with null customer_id (referential integrity violation)':'✓ No data anomalies detected'}
+  
+ACTION: Index creation script ready. Run db.runCommand({...}) to apply.</div>`;
+    },
+    fivetran: ()=>{
+      const failing = Math.floor(Math.random()*3);
+      return `
+<div class="demo-line key">━━━ TITAN PIPELINE ORCHESTRATOR — HEALTH CHECK COMPLETE ━━━</div>
+<div class="demo-line agent">check_id: ${rid} | connectors_scanned: ${8+Math.floor(Math.random()*12)} | latency: ${latency}ms</div>
+<div class="demo-line agent">
+PIPELINE HEALTH OVERVIEW:
+  healthy   : ${8+Math.floor(Math.random()*4)}
+  degraded  : ${failing}
+  failed    : ${Math.max(0,failing-1)}
+  
+${failing>0?`DEGRADED CONNECTOR:
+  connector : salesforce_prod
+  last_sync : 6 hours ago (expected: 1 hour)
+  error     : Schema drift — 3 new fields in Account object
+  
+ACTION TAKEN:
+  ✓ Schema update applied automatically
+  ✓ Re-sync triggered (ETA: 8 minutes)
+  ✓ Stakeholders notified via Slack
+  
+DATA FRESHNESS: salesforce_prod now syncing`:'ALL PIPELINES HEALTHY\n  Last sync: within expected windows'}
+
+MAR FORECAST: ${(2.1+Math.random()*0.8).toFixed(1)}M rows projected next 30 days
+COST ESTIMATE: $${(Math.random()*180+120).toFixed(2)}/month at current growth</div>`;
     }
-  </script>
+  };
+
+  return (responses[a.id]||responses.arize)();
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded',()=>{
+  buildMoatGrid();
+  animateCounter();
+});
+</script>
 </body>
 </html>
