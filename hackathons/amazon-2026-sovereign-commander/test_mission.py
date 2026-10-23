@@ -95,6 +95,10 @@ class TestMissionEngine(unittest.TestCase):
             time.sleep(0.02)
         proof=app.mcp_call({'jsonrpc':'2.0','id':4,'method':'tools/call','params':{'name':'titanu_mission_verify','arguments':{'mission_id':mid}}})
         self.assertTrue(json.loads(proof['result']['content'][0]['text'])['verified'])
+    def test_docker_packages_mission_engine(self):
+        dockerfile=(app.ROOT/'Dockerfile').read_text()
+        self.assertIn('mission.py',dockerfile)
+        self.assertIn('USER app',dockerfile)
     def test_concurrent_agents_present(self):
         x=self.complete()
         names={s['agent'] for s in x['steps']}
