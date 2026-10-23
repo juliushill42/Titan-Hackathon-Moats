@@ -1,6 +1,6 @@
 FROM python:3.12-alpine
 WORKDIR /srv
-COPY app.py index.html ./
+COPY app.py mission.py index.html ./
 COPY assets/ ./assets/
 ENV PYTHONUNBUFFERED=1 PORT=8787 TITANU_DATA_DIR=/data
 RUN mkdir -p /data && addgroup -S app && adduser -S app -G app && chown -R app:app /data /srv
