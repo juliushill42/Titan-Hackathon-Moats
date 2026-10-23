@@ -14,6 +14,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
+from mission import MissionEngine, schema as init_missions
 
 ROOT = Path(__file__).resolve().parent
 DATA = Path(os.environ.get('TITANU_DATA_DIR', str(ROOT / 'data'))).resolve()
@@ -71,6 +72,7 @@ def initialize():
                            [(str(uuid.uuid4()), *t, utcnow()) for t in SAMPLE])
             (DATA / 'initialized').write_text(utcnow())
             os.chmod(DATA / 'initialized', 0o600)
+    init_missions(connect)
 
 def tasks(db):
     return [dict(x) for x in db.execute('SELECT * FROM tasks ORDER BY created_at DESC')]
@@ -159,6 +161,53 @@ def execute(command):
         db.executemany('INSERT INTO events(receipt_id,agent,detail,occurred_at) VALUES(?,?,?,?)',[(receipt_id,*event,utcnow()) for event in events])
     return {'receipt_id':receipt_id,'intent':intent,'result':result,'agents':[{'name':a,'action':b} for a,b in events],'created_at':now}
 
+def mission_engine():
+    return MissionEngine(connect, lambda: DATA, tasks)
+
+MCP_PROTOCOL = '2025-11-25'
+MCP_TOOLS = [
+    {'name':'titanu_mission_launch','description':'Launch autonomous, bounded local multi-agent mission. Delegates to scout, risk, timeline, communications, optional remediation, builder and auditor. No external actions.',
+     'inputSchema':{'type':'object','properties':{'goal':{'type':'string','minLength':8,'maxLength':500},'allow_local_writes':{'type':'boolean','description':'Permit creating up to three local remediation tasks; defaults false.'}},'required':['goal'],'additionalProperties':False}},
+    {'name':'titanu_mission_status','description':'Read the mission agents, artifacts, completion status and evidence.',
+     'inputSchema':{'type':'object','properties':{'mission_id':{'type':'string','pattern':'^[0-9a-f]{32}$'}},'required':['mission_id'],'additionalProperties':False}},
+    {'name':'titanu_mission_verify','description':'Independently verify stored mission event hash chain and SHA-256 artifacts.',
+     'inputSchema':{'type':'object','properties':{'mission_id':{'type':'string','pattern':'^[0-9a-f]{32}$'}},'required':['mission_id'],'additionalProperties':False}},
+    {'name':'titanu_task_list','description':'Read locally persisted work items.',
+     'inputSchema':{'type':'object','properties':{},'additionalProperties':False}}
+]
+
+def mcp_call(request):
+    if request.get('jsonrpc')!='2.0' or not isinstance(request.get('method'),str):
+        return {'jsonrpc':'2.0','id':request.get('id'),'error':{'code':-32600,'message':'Invalid JSON-RPC request'}}
+    method=request['method'];id_=request.get('id');params=request.get('params') or {}
+    if method=='notifications/initialized':return None
+    if method=='initialize':
+        return {'jsonrpc':'2.0','id':id_,'result':{'protocolVersion':MCP_PROTOCOL,'capabilities':{'tools':{'listChanged':False}},'serverInfo':{'name':'titanu-public-mission-adapter','version':'2.0.0'}}}
+    if method=='tools/list':return {'jsonrpc':'2.0','id':id_,'result':{'tools':MCP_TOOLS}}
+    if method!='tools/call':return {'jsonrpc':'2.0','id':id_,'error':{'code':-32601,'message':'Unknown MCP method'}}
+    name=params.get('name') if isinstance(params,dict) else None
+    arguments=params.get('arguments',{}) if isinstance(params,dict) else {}
+    if not isinstance(arguments,dict):return {'jsonrpc':'2.0','id':id_,'error':{'code':-32602,'message':'arguments must be an object'}}
+    try:
+        engine=mission_engine()
+        if name=='titanu_mission_launch':
+            if set(arguments)-{'goal','allow_local_writes'}:raise ValueError('Unknown input keys')
+            result=engine.start(arguments.get('goal'),arguments.get('allow_local_writes',False))
+        elif name=='titanu_mission_status':
+            result=engine.detail(arguments.get('mission_id',''))
+            if result is None:raise ValueError('Unknown mission')
+        elif name=='titanu_mission_verify':
+            mid=arguments.get('mission_id','')
+            if not isinstance(mid,str) or not re.fullmatch('[0-9a-f]{32}',mid) or engine.detail(mid) is None:raise ValueError('Unknown mission')
+            result=engine.verify(mid)
+        elif name=='titanu_task_list':
+            if arguments:raise ValueError('Unknown input keys')
+            result={'tasks':state()['tasks']}
+        else:raise ValueError('Unknown MCP tool')
+        return {'jsonrpc':'2.0','id':id_,'result':{'content':[{'type':'text','text':json.dumps(result,ensure_ascii=False)}],'isError':False}}
+    except (ValueError,TypeError) as ex:
+        return {'jsonrpc':'2.0','id':id_,'result':{'content':[{'type':'text','text':str(ex)[:300]}],'isError':True}}
+
 class Handler(BaseHTTPRequestHandler):
     server_version='TitanUCommander/1.0'
     def log_message(self, fmt, *args):
@@ -179,8 +228,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         p=urlparse(self.path); route=p.path
         if route=='/health':
-            return self.output(200,{'status':'ok','product':'TitanU Sovereign Agent Commander','simulated_alexa':True,'uptime_sec':int(time.monotonic()-STARTED)})
+            return self.output(200,{'status':'ok','product':'TitanU Sovereign Agent Commander','simulated_alexa':True,'mcp_protocol':MCP_PROTOCOL,'multi_agent_missions':True,'uptime_sec':int(time.monotonic()-STARTED)})
         if route=='/api/state': return self.output(200,state())
+        if route=='/api/missions':return self.output(200,{'missions':mission_engine().list()})
+        if route.startswith('/api/missions/'):
+            parts=route.strip('/').split('/')
+            if len(parts)>=3:
+                mid=parts[2]
+                if len(parts)==3:
+                    result=mission_engine().detail(mid)
+                    return self.output(200,result) if result else self.output(404,{'error':'Mission not found'})
+                if len(parts)==4 and parts[3]=='verify':
+                    if not mission_engine().detail(mid):return self.output(404,{'error':'Mission not found'})
+                    return self.output(200,mission_engine().verify(mid))
+                if len(parts)==5 and parts[3]=='artifacts':
+                    blob=mission_engine().artifact(mid,parts[4])
+                    if blob is None:return self.output(404,{'error':'Artifact not found or integrity mismatch'})
+                    ctype='text/plain; charset=utf-8' if parts[4].endswith(('.txt','.md','.csv')) else 'application/octet-stream'
+                    self.send_common_headers(200,ctype,len(blob));self.wfile.write(blob);return
         if route.startswith('/api/receipt/'):
             id=route.rsplit('/',1)[-1]
             if not re.fullmatch(r'[0-9a-f]{16}',id): return self.output(400,{'error':'Invalid receipt ID'})
@@ -195,6 +260,14 @@ class Handler(BaseHTTPRequestHandler):
             typ='text/html; charset=utf-8' if f.endswith('.html') else ('application/javascript; charset=utf-8' if f.endswith('.js') else 'text/css; charset=utf-8')
             self.send_common_headers(200,typ,len(b));self.wfile.write(b);return
         self.output(404,{'error':'Not found'})
+    def mcp_post(self, request):
+        origin=self.headers.get('Origin')
+        if origin and not re.fullmatch(r'https?://(?:localhost|127\.0\.0\.1)(?::[0-9]{1,5})?',origin):
+            return self.output(403,{'error':'Cross-origin MCP access denied'})
+        if request.get('method')=='notifications/initialized':
+            self.send_response(202);self.send_header('Content-Length','0');self.send_header('Cache-Control','no-store');self.end_headers();return
+        result=mcp_call(request)
+        return self.output(200,result)
     def body(self):
         size=int(self.headers.get('Content-Length','0'))
         if size<=0 or size>MAX_BYTES:raise ValueError('Request must be 1–32768 bytes')
@@ -204,6 +277,13 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             path=urlparse(self.path).path; data=self.body()
+            if path=='/mcp':return self.mcp_post(data)
+            if path=='/api/missions':
+                return self.output(202,mission_engine().start(data.get('goal'),data.get('allow_local_writes',False)))
+            if path.startswith('/api/missions/') and path.endswith('/cancel'):
+                mid=path.strip('/').split('/')[2]
+                if not re.fullmatch(r'[0-9a-f]{32}',mid):raise ValueError('Invalid mission ID')
+                return self.output(200,{'cancelled':mission_engine().cancel(mid)})
             if path=='/api/command':
                 if not isinstance(data.get('command'),str):raise ValueError('Command string is required')
                 return self.output(200,execute(data['command']))
