@@ -33,3 +33,28 @@ if(SR){const recognition=new SR();recognition.lang='en-US';recognition.interimRe
  $('mic').onclick=()=>{recognition.start();$('mic').classList.add('active')};
 }else{$('mic').onclick=()=>notice('Speech capture unavailable in this browser. Type your directive instead.')}
 refresh();setInterval(refresh,5000);
+
+// PUBLIC MISSION FABRIC — only bounded local actions and tool contracts.
+let missionId=null, missionPolling=false;
+async function renderMission(id){
+ if(!id)return;const data=await req('/api/missions/'+id);const m=data.mission;
+ $('mission-status').textContent=m.status.toUpperCase();
+ const agents=data.steps||[];
+ $('mission-stats').textContent=agents.filter(x=>x.status==='running').length+' active workers · '+data.artifacts.length+' generated artifacts · '+data.events.length+' audit events';
+ $('mission-agent-board').innerHTML=agents.map((a,i)=>`<div class="mission-agent ${safe(a.status)}"><div class="mini">AGENT ${String(i+1).padStart(2,'0')} <span class="agent-status">${safe(a.status).toUpperCase()}</span></div><strong>${safe(a.agent)}</strong><p>${safe((a.result&&a.result.summary)||'Executing scoped local capability')}</p></div>`).join('')||'<p>Coordinating agents…</p>';
+ const proof=data.proof;
+ $('mission-evidence').innerHTML='<div class="evidence-title">OUTPUT ARTIFACTS / PROVENANCE</div>'+data.artifacts.map(a=>`<a href="${safe(a.url)}" target="_blank" rel="noopener" class="evidence-file">↗ ${safe(a.name)} <small>SHA256 ${safe(a.sha256.slice(0,20))}…</small></a>`).join('')+
+ (proof?`<div class="proof-status"><b>${proof.verified?'INTEGRITY VERIFIED':'INTEGRITY FAILED'}</b><span>${safe(proof.event_count)} chained events · ${safe(proof.steps_passed)} verified steps · ${safe(proof.artifacts)} checked artifacts</span><a target="_blank" rel="noopener" href="/api/missions/${encodeURIComponent(id)}/verify">VIEW CRYPTOGRAPHIC EVIDENCE ↗</a></div>`:'');
+ return m.status;
+}
+$('mission-form').addEventListener('submit',async e=>{
+ e.preventDefault();if(missionPolling)return;
+ const goal=$('mission-goal').value;const allow_local_writes=$('mission-writes').checked;
+ $('mission-launch').disabled=true;$('mission-notice').textContent='Delegating objective to autonomous specialist workers…';
+ try{const result=await req('/api/missions','POST',{goal,allow_local_writes});missionId=result.id;missionPolling=true;
+   for(let i=0;i<80;i++){const s=await renderMission(missionId);if(['completed','failed','cancelled'].includes(s)){missionPolling=false;break;}await new Promise(r=>setTimeout(r,250));}
+   const s=await renderMission(missionId);$('mission-notice').textContent=s==='completed'?'Mission completed. Artifact integrity and audit chain available below.':'Mission status: '+s+'. Review the agent telemetry.';
+   await refresh();
+ }catch(e){$('mission-notice').textContent=e.message;}finally{missionPolling=false;$('mission-launch').disabled=false;}
+});
+(async()=>{try{const result=await req('/api/missions');if(result.missions.length){missionId=result.missions[0].id;await renderMission(missionId)}}catch(e){/* optional mission API */}})();
