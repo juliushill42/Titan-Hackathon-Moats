@@ -1,9 +1,29 @@
 {
- "project":"TitanU Sovereign Agent Commander",
- "hackathon":"Build, Ship, Shape: Amazon Developer Hackathon",
- "track":"Alexa+ simulated experience",
- "tested_date":"2026-10-22",
- "tests":{"unit_and_http":"10 passed","http_e2e":"passed","persisted_tasks":true,"persisted_receipts":true,"local_live_demo":"passed"},
- "limitations":{"live_amazon_alexa_integration":false,"llm_runtime":false,"public_video_uploaded":false,"submitted_to_devpost":false},
- "invocation":"./titanu-amazon-commander-bootstrap.sh test"
+  "build": "2026-10-23",
+  "claims": [
+    "Python stdlib multithreaded specialist orchestration",
+    "bounded local writes with explicit authorization",
+    "hash-chained event proof and SHA-256 artifact verification",
+    "MCP-over-Streamable-HTTP JSON-RPC subset"
+  ],
+  "external_actions_performed": false,
+  "mcp_version": "2025-11-25",
+  "project": "TitanU Sovereign Agent Commander \u2014 Public Autonomous Mission Fabric",
+  "real_alexa_integration": false,
+  "scope": "local-only actions, independent clean-room public reference; no EAISWARM private source bundled",
+  "source_files": {
+    "Dockerfile": "69f8c1659849839d6a8f86d52955d0a2e057135378b578d518ac8d406a031776",
+    "README.md": "2c20992d74aa47e21120c25b3596250858c77f960e9acb29f651e0216cb1411b",
+    "app.py": "f3a3c2f0ee627661df7db56d88bddd4b486b92b751c6daba8e2fb966bedea04a",
+    "assets/app.js": "b3bc308c93506bf91229d29e452a1465a0a91308549dd5a5c208a17f8d002314",
+    "assets/style.css": "8686af1952a689585cfa3b98efe9f622e3c26f3377093b02775e943eec2c675c",
+    "index.html": "ee06199504cf7dc58a94112276d1f9697375c167f00d4485fa3e676dc7e16bb9",
+    "mission.py": "e1189a62026b914ad11be63627c69014bd831ca72d66385bb136fd8e1a760b31",
+    "test_app.py": "fddb9f5129a082e4394f2eaf6d69121f8214f48a021b7af7de652a0cee48e7c0",
+    "test_mission.py": "24ea5357a1b822f1bfd1e8e629cd87a0cbecd4c19f2b11a8a07a18f7181fcb34",
+    "titanu-amazon-commander-bootstrap.sh": "b92946d2f96329971175e468a15d45a3e33f6ead44ebdcca667c7c528d9e4e76"
+  },
+  "test_command": "./titanu-amazon-commander-bootstrap.sh proof",
+  "tests_passed": 25,
+  "uses_private_titanu_code": false
 }
