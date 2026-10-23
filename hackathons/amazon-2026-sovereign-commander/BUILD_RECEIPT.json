@@ -1,0 +1,9 @@
+{
+ "project":"TitanU Sovereign Agent Commander",
+ "hackathon":"Build, Ship, Shape: Amazon Developer Hackathon",
+ "track":"Alexa+ simulated experience",
+ "tested_date":"2026-10-22",
+ "tests":{"unit_and_http":"10 passed","http_e2e":"passed","persisted_tasks":true,"persisted_receipts":true,"local_live_demo":"passed"},
+ "limitations":{"live_amazon_alexa_integration":false,"llm_runtime":false,"public_video_uploaded":false,"submitted_to_devpost":false},
+ "invocation":"./titanu-amazon-commander-bootstrap.sh test"
+}
